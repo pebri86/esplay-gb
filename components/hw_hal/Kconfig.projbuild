@@ -1,0 +1,188 @@
+menu "Nofrendo ESP32-specific configuration"
+
+choice NOFRENDO_HARDWARE
+	prompt "Hardware to run on"
+	default ESP_MICRO_NES_HW
+	help
+		This emulator can run on various types of hardware. Select what you have here.
+
+config ESP_MICRO_NES_HW
+	bool "MicroNES Hardware"
+
+config HW_CUSTOM
+	bool "Custom hardware"
+
+endchoice
+
+config HW_LCD_MOSI_GPIO_CUST
+	int "LCD MOSI pin"
+	depends on HW_CUSTOM
+	range 1 35
+	default 23
+
+config HW_LCD_CLK_GPIO_CUST
+	int "LCD CLK pin"
+	depends on HW_CUSTOM
+	range 1 35
+	default 19
+
+config HW_LCD_CS_GPIO_CUST
+	int "LCD CS pin"
+	depends on HW_CUSTOM
+	range 1 35
+	default 22
+
+config HW_LCD_DC_GPIO_CUST
+	int "LCD DC pin"
+	depends on HW_CUSTOM
+	range 1 35
+	default 5
+
+config HW_LCD_RESET_GPIO_CUST
+	int "LCD RESET pin"
+	depends on HW_CUSTOM
+	range 1 35
+	default 18
+
+config HW_LCD_BL_GPIO_CUST
+	int "LCD Backlight Enable pin"
+	depends on HW_CUSTOM
+	range 1 35
+	default 17
+
+config HW_INV_BL_CUST
+	bool "Invert backlight output"
+	default n
+	depends on HW_CUSTOM
+
+
+config HW_INV_BL
+	bool
+	default HW_INBV_BL_CUST if HW_CUSTOM
+	default n if ESP_MICRO_NES_HW
+
+config HW_LCD_MOSI_GPIO
+	int
+	default HW_LCD_MOSI_GPIO_CUST if HW_CUSTOM
+	default 23 if ESP_MICRO_NES_HW
+
+config HW_LCD_CLK_GPIO
+	int
+	default HW_LCD_CLK_GPIO_CUST if HW_CUSTOM
+	default 19 if ESP_MICRO_NES_HW
+
+config HW_LCD_CS_GPIO
+	int
+	default HW_LCD_CS_GPIO_CUST if HW_CUSTOM
+	default 22 if ESP_MICRO_NES_HW
+
+config HW_LCD_DC_GPIO
+	int
+	default HW_LCD_DC_GPIO_CUST if HW_CUSTOM
+	default 5 if ESP_MICRO_NES_HW
+
+config HW_LCD_RESET_GPIO
+	int
+	default HW_LCD_RESET_GPIO_CUST if HW_CUSTOM
+	default 18 if ESP_MICRO_NES_HW
+
+config HW_LCD_BL_GPIO
+	int
+	default HW_LCD_BL_GPIO_CUST if HW_CUSTOM
+	default 17 if ESP_MICRO_NES_HW
+
+config SOUND_ENA
+	bool "Analog audio on GPIO26"
+	default n
+	help
+		ESP32 will output 0-3.3V analog audio signal on GPIO26.
+		
+config GAMEPAD_A_CUST
+	int "Gamepad A GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 0
+
+config GAMEPAD_B_CUST
+	int "Gamepad B GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 4
+
+config GAMEPAD_START_CUST
+	int "Gamepad START GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 12
+
+config GAMEPAD_SELECT_CUST
+	int "Gamepad SELECT GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 14
+
+config GAMEPAD_UP_CUST
+	int "Gamepad UP GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 33
+
+config GAMEPAD_DOWN_CUST
+	int "Gamepad DOWN GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 25
+
+config GAMEPAD_LEFT_CUST
+	int "Gamepad LEFT GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 32
+
+config GAMEPAD_RIGHT_CUST
+	int "Gamepad RIGHT GPIO pin number"
+	depends on HW_CUSTOM
+	range 0 33
+	default 27
+
+config GAMEPAD_A
+	int
+    default GAMEPAD_A_CUST if HW_CUSTOM
+	default 0 if ESP_MICRO_NES_HW
+
+config GAMEPAD_B
+	int
+    default GAMEPAD_B_CUST if HW_CUSTOM
+	default 4 if ESP_MICRO_NES_HW
+
+config GAMEPAD_START
+	int
+    default GAMEPAD_START_CUST if HW_CUSTOM
+	default 12 if ESP_MICRO_NES_HW
+
+config GAMEPAD_SELECT
+	int
+    default GAMEPAD_SELECT_CUST if HW_CUSTOM
+	default 14 if ESP_MICRO_NES_HW
+
+config GAMEPAD_UP
+	int
+    default GAMEPAD_UP_CUST if HW_CUSTOM
+	default 33 if ESP_MICRO_NES_HW
+
+config GAMEPAD_DOWN
+	int
+    default GAMEPAD_DOWN_CUST if HW_CUSTOM
+	default 25 if ESP_MICRO_NES_HW
+
+config GAMEPAD_LEFT
+	int
+    default GAMEPAD_LEFT_CUST if HW_CUSTOM
+	default 32 if ESP_MICRO_NES_HW
+
+config GAMEPAD_RIGHT
+	int
+    default GAMEPAD_RIGHT_CUST if HW_CUSTOM
+	default 27 if ESP_MICRO_NES_HW
+
+endmenu
