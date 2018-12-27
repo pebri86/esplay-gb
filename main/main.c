@@ -103,7 +103,7 @@ void run_to_vblank()
 
   sound_mix();
 
-  //if (pcm.pos > 100)
+  if (pcm.pos > 100)
   {
         currentAudioBufferPtr = audioBuffer[currentAudioBuffer];
         currentAudioSampleCount = pcm.pos;
@@ -147,7 +147,7 @@ void videoTask(void *arg)
         if (param == 1)
             break;
 
-        ili9341_write_frame_gb(param, scaling_enabled);
+        write_gb_frame(param);
 
         xQueueReceive(vidQueue, &param, portMAX_DELAY);
     }
@@ -240,7 +240,7 @@ void app_main(void)
     printf("gnuboy (%s-%s).\n", COMPILEDATE, GITREV);
     
     // Gamepad
-    gamepadInit();
+    gamepad_init();
 
     // Display
     display_init();
@@ -327,24 +327,24 @@ void app_main(void)
     uint stopTime;
     uint totalElapsedTime = 0;
     uint actualFrameCount = 0;
-    hw_gamepad_state lastJoysticState;
+    input_gamepad_state lastJoysticState;
 
-    gpdReadInput(&lastJoysticState);
+    gamepad_read(&lastJoysticState);
     while (true)
     {
-        hw_gamepad_state joystick;
-        gpdReadInput(&joystick);
+        input_gamepad_state joystick;
+        gamepad_read(&joystick);
 
-        pad_set(PAD_UP, joystick.values[HW_INPUT_UP]);
-        pad_set(PAD_RIGHT, joystick.values[HW_INPUT_RIGHT]);
-        pad_set(PAD_DOWN, joystick.values[HW_INPUT_DOWN]);
-        pad_set(PAD_LEFT, joystick.values[HW_INPUT_LEFT]);
+        pad_set(PAD_UP, joystick.values[GAMEPAD_INPUT_UP]);
+        pad_set(PAD_RIGHT, joystick.values[GAMEPAD_INPUT_RIGHT]);
+        pad_set(PAD_DOWN, joystick.values[GAMEPAD_INPUT_DOWN]);
+        pad_set(PAD_LEFT, joystick.values[GAMEPAD_INPUT_LEFT]);
 
-        pad_set(PAD_SELECT, joystick.values[HW_INPUT_SELECT]);
-        pad_set(PAD_START, joystick.values[HW_INPUT_START]);
+        pad_set(PAD_SELECT, joystick.values[GAMEPAD_INPUT_SELECT]);
+        pad_set(PAD_START, joystick.values[GAMEPAD_INPUT_START]);
 
-        pad_set(PAD_A, joystick.values[HW_INPUT_A]);
-        pad_set(PAD_B, joystick.values[HW_INPUT_B]);
+        pad_set(PAD_A, joystick.values[GAMEPAD_INPUT_A]);
+        pad_set(PAD_B, joystick.values[GAMEPAD_INPUT_B]);
 
 
         startTime = xthal_get_ccount();

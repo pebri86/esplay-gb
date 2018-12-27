@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := nesemu
+PROJECT_NAME := esplay-gb
 
 include $(IDF_PATH)/make/project.mk
 

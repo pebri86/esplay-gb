@@ -5,21 +5,15 @@ deps_config := \
 	/home/pebri/Projects/ESP32/esp-idf/components/driver/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/esp32/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/esp_adc_cal/Kconfig \
-	/home/pebri/Projects/ESP32/esp-idf/components/esp_event/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/esp_http_client/Kconfig \
-	/home/pebri/Projects/ESP32/esp-idf/components/esp_http_server/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/ethernet/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/fatfs/Kconfig \
-	/home/pebri/Projects/ESP32/esp-idf/components/freemodbus/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/freertos/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/heap/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/libsodium/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/log/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/lwip/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/mbedtls/Kconfig \
-	/home/pebri/Projects/ESP32/esp-idf/components/mdns/Kconfig \
-	/home/pebri/Projects/ESP32/esp-idf/components/mqtt/Kconfig \
-	/home/pebri/Projects/ESP32/esp-idf/components/nvs_flash/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/openssl/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/pthread/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/spi_flash/Kconfig \
@@ -28,8 +22,8 @@ deps_config := \
 	/home/pebri/Projects/ESP32/esp-idf/components/vfs/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/wear_levelling/Kconfig \
 	/home/pebri/Projects/ESP32/esp-idf/components/bootloader/Kconfig.projbuild \
+	/home/pebri/Projects/ESP32/esp-micrones-gb/components/drivers/Kconfig.projbuild \
 	/home/pebri/Projects/ESP32/esp-idf/components/esptool_py/Kconfig.projbuild \
-	/home/pebri/Projects/ESP32/esp-micrones-gb/components/hw_hal/Kconfig.projbuild \
 	/home/pebri/Projects/ESP32/esp-idf/components/partition_table/Kconfig.projbuild \
 	/home/pebri/Projects/ESP32/esp-idf/Kconfig
 

@@ -4,6 +4,7 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "nvs_flash.h"
 #include "esp_partition.h"
 #include "esp_system.h"
 #include "esp_heap_caps.h"
@@ -118,7 +119,9 @@ extern const char* SD_BASE_PATH;
 static void initmem(void *mem, int size)
 {
 	char *p = mem;
-	memset(p, 0xff /*memfill*/, size);
+	//memset(p, 0xff /*memfill*/, size);
+	if (memfill >= 0)
+		memset(p, memfill, size);
 }
 
 static byte *loadfile(FILE *f, int *len)
@@ -278,7 +281,8 @@ int rom_load()
 	printf("loader: mbc.type=%s, mbc.romsize=%d (%dK), mbc.ramsize=%d (%dK)\n", mbcName, mbc.romsize, rlen / 1024, mbc.ramsize, sram_length / 1024);
 
 	// ROM
-	rom.bank[0] = data;
+	//rom.bank[0] = data;
+	rom.bank = data;
 	rom.length = rlen;
 
 	// SRAM
@@ -463,7 +467,7 @@ void loader_unload()
 	if (rom.bank) free(rom.bank);
 	if (ram.sbank) free(ram.sbank);
 	romfile = sramfile = saveprefix = 0;
-	rom.bank[0] = 0;
+	rom.bank = 0;
 	ram.sbank = 0;
 	mbc.type = mbc.romsize = mbc.ramsize = mbc.batt = 0;
 }
