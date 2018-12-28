@@ -39,7 +39,6 @@ extern int debug_trace;
 struct fb fb;
 struct pcm pcm;
 
-
 uint16_t* displayBuffer[2]; //= { fb0, fb0 }; //[160 * 144];
 uint8_t currentBuffer;
 
@@ -195,7 +194,6 @@ void audioTask(void* arg)
   while (1) {}
 }
 
-
 static void SaveState()
 {
     
@@ -252,7 +250,7 @@ void app_main(void)
     loader_init(NULL);
 
     // Clear display
-    //ili9341_write_frame_gb(NULL, true);
+    write_gb_frame(NULL);
 
     // Allocate display buffers
     displayBuffer[0] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
@@ -297,7 +295,6 @@ void app_main(void)
   	fb.ptr = framebuffer;
   	fb.enabled = 1;
   	fb.dirty = 0;
-
 
     // Note: Magic number obtained by adjusting until audio buffer overflows stop.
     const int audioBufferLength = AUDIO_SAMPLE_RATE / 10 + 1;
