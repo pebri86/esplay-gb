@@ -1,3 +1,6 @@
 [submodule "drivers"]
 	path = components/drivers
 	url = https://github.com/pebri86/esplay-drivers.git
+[submodule "components/lvgl"]
+	path = components/lvgl
+	url = https://github.com/littlevgl/lvgl.git

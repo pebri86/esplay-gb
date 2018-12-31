@@ -34,7 +34,8 @@ CONFIG_FLASH_ENCRYPTION_ENABLED=
 #
 # LittleV Graphics Library
 #
-CONFIG_USE_LVGL_LIBRARY=
+CONFIG_USE_LVGL_LIBRARY=y
+CONFIG_USE_LVGL=1
 
 #
 # Hardware configuration

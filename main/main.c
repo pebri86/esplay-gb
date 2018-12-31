@@ -33,6 +33,8 @@
 #include <display.h>
 #include <gamepad.h>
 #include <audio.h>
+#include <sdcard.h>
+#include <ui.h>
 
 extern int debug_trace;
 
@@ -50,6 +52,10 @@ int32_t* audioBuffer[2];
 volatile uint8_t currentAudioBuffer = 0;
 volatile uint16_t currentAudioSampleCount;
 volatile int16_t* currentAudioBufferPtr;
+
+const char* StateFileName = "/storage/gnuboy.sav";
+
+const char* SD_BASE_PATH = "/sd";
 
 #define GAMEBOY_WIDTH (160)
 #define GAMEBOY_HEIGHT (144)
@@ -196,12 +202,104 @@ void audioTask(void* arg)
 
 static void SaveState()
 {
-    
+    // Save sram
+    /*char* romPath = odroid_settings_RomFilePath_get();
+    if (romPath)
+    {
+        char* fileName = odroid_util_GetFileName(romPath);
+        if (!fileName) abort();
+
+        char* pathName = odroid_sdcard_create_savefile_path(SD_BASE_PATH, fileName);
+        if (!pathName) abort();
+
+        FILE* f = fopen(pathName, "w");
+        if (f == NULL)
+        {
+            printf("%s: fopen save failed\n", __func__);
+            abort();
+        }
+
+        savestate(f);
+        fclose(f);
+
+        printf("%s: savestate OK.\n", __func__);
+
+        free(pathName);
+        free(fileName);
+        free(romPath);
+    }
+    else
+    {*/
+        FILE* f = fopen(StateFileName, "w");
+        if (f == NULL)
+        {
+            printf("SaveState: fopen save failed\n");
+        }
+        else
+        {
+            savestate(f);
+            fclose(f);
+
+            printf("SaveState: savestate OK.\n");
+        }
+    //}
 }
 
 static void LoadState(const char* cartName)
 {
-    
+    /*char* romName = odroid_settings_RomFilePath_get();
+    if (romName)
+    {
+        char* fileName = odroid_util_GetFileName(romName);
+        if (!fileName) abort();
+
+        char* pathName = odroid_sdcard_create_savefile_path(SD_BASE_PATH, fileName);
+        if (!pathName) abort();
+
+        FILE* f = fopen(pathName, "r");
+        if (f == NULL)
+        {
+            printf("LoadState: fopen load failed\n");
+        }
+        else
+        {
+            loadstate(f);
+            fclose(f);
+
+            vram_dirty();
+            pal_dirty();
+            sound_dirty();
+            mem_updatemap();
+
+            printf("LoadState: loadstate OK.\n");
+        }
+
+        free(pathName);
+        free(fileName);
+        free(romName);
+    }
+    else*/
+    //{
+        FILE* f = fopen(StateFileName, "r");
+        if (f == NULL)
+        {
+            printf("LoadState: fopen load failed\n");
+        }
+        else
+        {
+            loadstate(f);
+            fclose(f);
+
+            vram_dirty();
+            pal_dirty();
+            sound_dirty();
+            mem_updatemap();
+
+            printf("LoadState: loadstate OK.\n");
+        }
+    //}
+
+    //Volume = odroid_settings_Volume_get();
 }
 
 static void PowerDown()
@@ -236,12 +334,21 @@ static void PowerDown()
 void app_main(void)
 {
     printf("gnuboy (%s-%s).\n", COMPILEDATE, GITREV);
-    
+    nvs_flash_init();
+
     // Gamepad
     gamepad_init();
 
     // Display
-    display_init();
+    //display_init();
+
+    // ui init
+    ui_init();
+
+    while(true)
+    {
+      vTaskDelay(100);
+    }
 
     // Audio 
     audio_init(AUDIO_SAMPLE_RATE);
