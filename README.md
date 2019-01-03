@@ -3,7 +3,7 @@
 
 Port of GNUBoy to ESP32, i use WROOM-32 module but applicable to other esp32 that has similar specs or higher like WROVER.
 
-NEW FUNCTION!
+NEW FUNCTION on Stage branch
 - SD Card Support, now you can load ROM from SD, also save and load emulator state on SD card.
 - New UI menu for selecting rom on sdcard.
 - Press Menu Button short time for save state action and then sleep the esp, press short again to wake up and load previously state file.
@@ -11,6 +11,7 @@ NEW FUNCTION!
 - Choose settings tab for change screen brightness. 
 
 Connect SDCard to the following pins
+
 Pin | GPIO
 ---- | ----
 MISO | 22
@@ -20,13 +21,19 @@ CS | 4
 
 Place ROMS in folder named 'roms' on root of sdcard, create following structure on sdcard:
 
-/-
- |
- --roms (place your ROMS here)
- |
- --esplay
-   |
-   --data (this to place state file as .sav)
+	/-
+
+	|
+
+ 	--roms (place your ROMS here)
+
+ 	|
+
+ 	--esplay
+
+   		|
+
+   		--data (this to place state file as .sav)
 
 
 Compiling
