@@ -21,6 +21,7 @@
 #include "settings.h"
 #include "string.h"
 #include "sdcard.h"
+#include "rom/crc.h"
 
 /*********************
  *      DEFINES
@@ -46,6 +47,8 @@ static lv_res_t btn_click_action(lv_obj_t *btn);
 static void create_settings_page(lv_obj_t *parent);
 static void ui_task(void *arg);
 static void lv_task(void *arg);
+static void copy_rom_task(void *arg);
+static void flash_rom(const char* fullPath);
 
 LV_IMG_DECLARE(img_bubble_pattern);
 /**********************
@@ -62,10 +65,14 @@ static bool lv_task_is_running = false;
 static int tabSize;
 
 char* VERSION = NULL;
-const char* SD_CARD = "/sd";
+//const char* SD_CARD = "/sd";
 char** files;
 int fileCount;
-const char* path = "/sd/roms/gb";
+const char* SD_CARD = "/sd";
+const char* path = "/sd/roms";
+size_t fullPathLength;
+char* fullPath;
+
 /**********************
  *      MACROS
  **********************/
@@ -76,9 +83,11 @@ const char* path = "/sd/roms/gb";
 void ui_init()
 {
     init_rom_list();
+
+    //display_prepare();
     display_init();
-    // Start background polling
-    xTaskCreatePinnedToCore(&ui_task, "ui_task", 1024 * 2, NULL, 5, NULL, 0);
+
+    xTaskCreatePinnedToCore(&ui_task, "ui_task", 1024 * 3, NULL, 5, NULL, 0);
 
     printf("ui_init done.\n");
 }
@@ -165,6 +174,28 @@ int ui_choose_rom()
 /**********************
  *   STATIC FUNCTIONS
  **********************/
+static void copy_rom_task(void *arg)
+{
+    printf("copy_rom_task started.\n");
+    vTaskDelay(1000);
+    ui_task_is_running = false;
+    if(strcmp(get_rom_name_settings(), fullPath) == 0)
+    {        
+        set_menu_flag_settings(0);
+    }
+    else 
+    {
+        flash_rom(fullPath);    
+        
+        set_rom_name_settings(fullPath);
+        set_menu_flag_settings(0);
+    }
+
+    // Restart device
+    esp_restart();
+    vTaskDelete(NULL);
+}
+
 static void lv_task(void *arg)
 {
     printf("lv_task started.\n");
@@ -175,9 +206,9 @@ static void lv_task(void *arg)
         vTaskDelay(1);
     }
 
+    printf("lv_task done.\n");
     /* Remove the task from scheduler*/
     vTaskDelete(NULL);
-    printf("lv_task done.\n");
     /* Never return*/
     while (1) { vTaskDelay(1);}
 }
@@ -206,14 +237,11 @@ static void ui_task(void *arg)
     while(ui_task_is_running)
     {
         lv_task_handler();
-        vTaskDelay(100/portTICK_PERIOD_MS);
+        vTaskDelay(10/portTICK_PERIOD_MS);
     }
 
     lv_obj_del(lv_scr_act());
     lv_task_is_running = false;
-
-    free(files);
-    free(fileCount);
 
     ESP_LOGI(TAG_DEBUG, "(%s) RAM left %d", __func__ , esp_get_free_heap_size());
     printf("ui_task done.\n");
@@ -225,17 +253,22 @@ static void ui_task(void *arg)
 }
 
 static lv_res_t list_release_action(lv_obj_t * btn)
-{
+{    
     const char * label;
     label = lv_list_get_btn_text(btn);
-    for(int i=0; i < fileCount; i++){
-        if (strcmp(files[i],label) == 0)
-        {
-            selected = i;
-            /*exit task after rom selected*/
-            ui_task_is_running = false;
-        }
-    }
+    fullPathLength = strlen(path) + 1 + strlen(label) + 1;
+
+    fullPath = (char*)malloc(fullPathLength);
+    if (!fullPath) abort();
+
+    strcpy(fullPath, path);
+    strcat(fullPath, "/");
+    strcat(fullPath, label);
+
+    lv_obj_t * mbox2 = lv_mbox_create(lv_scr_act(), NULL);
+    lv_mbox_set_text(mbox2, "Loading ROM, Please wait...");
+
+    xTaskCreate(&copy_rom_task, "copy_rom_task", 1024 * 10, NULL, 5, NULL);
 
     return LV_RES_OK;
 }
@@ -247,10 +280,9 @@ static void init_rom_list() {
     {
         printf("Error sdcard");
     }
-
     const char* result = NULL;
 
-    //printf("%s: HEAP=%#010x\n", __func__, esp_get_free_heap_size());
+    printf("%s: HEAP=%#010x\n", __func__, esp_get_free_heap_size());
 
     files = 0;
     fileCount = sdcard_files_get(path, ".gbc", &files);
@@ -416,4 +448,70 @@ static lv_res_t btn_click_action(lv_obj_t *btn)
     lv_mbox_start_auto_close(mbox1, 1000);
 
     return LV_RES_OK;
+}
+
+static void flash_rom(const char* fullPath)
+{
+    sdcard_files_free(files, fileCount);
+    esp_err_t ret;
+    
+    ret = sdcard_open(SD_CARD);
+    if (ret != ESP_OK)
+    {
+        printf("Error sdcard\n");
+    }
+    
+    printf("%s: HEAP=%#010x\n", __func__, esp_get_free_heap_size());
+
+    printf("Opening file '%s'.\n", fullPath);
+
+    FILE* file = fopen(fullPath, "rb");
+    if (file == NULL)
+    {
+        printf("%s: File open error", __func__);
+    }
+
+    const int WRITE_BLOCK_SIZE = 1024;
+    void* data = malloc(WRITE_BLOCK_SIZE);
+    if (!data)
+    {
+        printf("%s: Data memory error", __func__);
+    }
+
+    fseek(file, 0, SEEK_END);
+    size_t file_size = ftell(file);
+
+    // location to beginning of files
+    fseek(file, 0, SEEK_SET);
+
+    const esp_partition_t* part = esp_partition_find_first(0x40, 1, NULL);
+    if (part == NULL)
+    {
+        printf("esp_partition_find_first failed. (0x40)\n");
+    }
+
+    // erase entire partition
+    ret = esp_partition_erase_range(part, 0, part->size);
+    if (ret != ESP_OK)
+    {
+        printf("sesp_partition_erase_range failed. \n");
+    }
+
+    const size_t FLASH_START_ADDRESS = part->address;
+    printf("%s: FLASH_START_ADDRESS=%#010x\n", __func__, FLASH_START_ADDRESS);
+
+    size_t curren_flash_address = FLASH_START_ADDRESS;
+
+    for(size_t i = 0; i<file_size; i+=WRITE_BLOCK_SIZE)
+    {
+        fseek(file, i, SEEK_SET);
+        fread(data, WRITE_BLOCK_SIZE+1, 1, file);
+        ret = spi_flash_write(curren_flash_address + i, data, WRITE_BLOCK_SIZE);
+        if (ret != ESP_OK)
+        {
+            printf("spi_flash_write failed. address=%#08x\n", curren_flash_address + i);
+        }
+    }
+    printf("Flash done.\n");
+    close(file);
 }
