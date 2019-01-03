@@ -11,6 +11,7 @@ NEW FUNCTION on Stage branch
 - Choose settings tab for change screen brightness. 
 
 Connect SDCard to the following pins
+
 Pin | GPIO
 ---- | ----
 MISO | 22
@@ -21,11 +22,17 @@ CS | 4
 Place ROMS in folder named 'roms' on root of sdcard, create following structure on sdcard:
 
 /-
+
  |
+
  --roms (place your ROMS here)
+
  |
+
  --esplay
+
    |
+   
    --data (this to place state file as .sav)
 
 Compiling
