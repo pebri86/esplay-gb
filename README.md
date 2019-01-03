@@ -3,6 +3,32 @@
 
 Port of GNUBoy to ESP32, i use WROOM-32 module but applicable to other esp32 that has similar specs or higher like WROVER.
 
+NEW FUNCTION!
+- SD Card Support, now you can load ROM from SD, also save and load emulator state on SD card.
+- New UI menu for selecting rom on sdcard.
+- Press Menu Button short time for save state action and then sleep the esp, press short again to wake up and load previously state file.
+- Press Menu long time until menu UI appear to select ROM (play tab). to navigate the ui use select button to choose menu component, then use navigation button up/down/left/right to choose list of rom and then use A button to select rom.
+- Choose settings tab for change screen brightness. 
+
+Connect SDCard to the following pins
+Pin | GPIO
+---- | ----
+MISO | 22
+MOSI | 23
+CLK | 18
+CS | 4
+
+Place ROMS in folder named 'roms' on root of sdcard, create following structure on sdcard:
+
+/-
+ |
+ --roms (place your ROMS here)
+ |
+ --esplay
+   |
+   --data (this to place state file as .sav)
+
+
 Compiling
 ---------
 
@@ -18,11 +44,11 @@ To display the NES output, please connect a 160x128 1,8" ST7735R or ILI9341 SPI 
 Pin | GPIO
 ---- | ----
 MOSI/SDA | 23
-CLK | 19
-CS | 22
-DC | 5
-RST | 18
-BCKL | 17
+CLK | 18
+CS | 17
+DC | 16
+RST | 19
+BCKL | 5
 
 (BCKL = backlight enable - PWM Controlled)
 
@@ -37,7 +63,7 @@ To control the NES, connect GPIO pins to a common ground pcb gamepad:
 Key | GPIO
 ---- | ----
 A | 0
-B | 4
+B | 13
 START | 12
 SELECT | 14
 RIGHT | 27
