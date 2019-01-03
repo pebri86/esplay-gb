@@ -23,17 +23,17 @@ Place ROMS in folder named 'roms' on root of sdcard, create following structure 
 
 /-
 
- |
+	|
 
- --roms (place your ROMS here)
+ 	--roms (place your ROMS here)
 
- |
+ 	|
 
- --esplay
+ 	--esplay
 
-   |
-   
-   --data (this to place state file as .sav)
+   		|
+
+   		--data (this to place state file as .sav)
 
 Compiling
 ---------
