@@ -148,8 +148,8 @@ void ui_create(void)
     lv_obj_set_parent(wp, ((lv_tabview_ext_t *) tv->ext_attr)->content);
     lv_obj_set_pos(wp, 0, -5);
 #endif
-    lv_obj_t *tab1 = lv_tabview_add_tab(tv, "Play");
-    lv_obj_t *tab2 = lv_tabview_add_tab(tv, "Settings");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tv, SYMBOL_DIRECTORY " Play");
+    lv_obj_t *tab2 = lv_tabview_add_tab(tv, SYMBOL_SETTINGS " Settings");
     tabSize = lv_obj_get_height(tab1);
 
     lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BG, &style_tv_btn_bg);
@@ -179,6 +179,7 @@ static void copy_rom_task(void *arg)
     printf("copy_rom_task started.\n");
     vTaskDelay(1000);
     ui_task_is_running = false;
+    lv_obj_del(lv_scr_act());
     if(strcmp(get_rom_name_settings(), fullPath) == 0)
     {        
         set_menu_flag_settings(0);
@@ -240,7 +241,6 @@ static void ui_task(void *arg)
         vTaskDelay(10/portTICK_PERIOD_MS);
     }
 
-    lv_obj_del(lv_scr_act());
     lv_task_is_running = false;
 
     ESP_LOGI(TAG_DEBUG, "(%s) RAM left %d", __func__ , esp_get_free_heap_size());
@@ -298,7 +298,7 @@ static int get_menu_selected()
 static void create_header()
 {
     header = lv_label_create(lv_scr_act(), NULL); /*First parameters (scr) is the parent*/
-    lv_label_set_text(header, "MicroNES");  /*Set the text*/
+    lv_label_set_text(header, "ESPlay-GB");  /*Set the text*/
     lv_obj_align(header, lv_scr_act(), LV_ALIGN_IN_TOP_MID, 0, 0);
 
     /****************
@@ -312,7 +312,7 @@ static void create_header()
     * ADD A CLOCK
     ****************/
     lv_obj_t * clock = lv_label_create(lv_scr_act(), NULL); /*First parameters (scr) is the parent*/
-    lv_label_set_text(clock, "15:00"); /*Set the text*/
+    lv_label_set_text(clock, SYMBOL_VOLUME_MAX); /*Set the text*/
     lv_obj_align(clock, header, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(header)-LV_HOR_RES)/2)+5, 0);
 }
 
@@ -416,7 +416,7 @@ static void create_settings_page(lv_obj_t *parent)
 
     /*Add a label to the button*/
     lv_obj_t * btn1_label = lv_label_create(btn1, NULL);
-    lv_label_set_text(btn1_label, "Save");
+    lv_label_set_text(btn1_label, SYMBOL_SAVE " Save");
 
     lv_group_add_obj(group, slider);
     lv_group_add_obj(group, btn1);

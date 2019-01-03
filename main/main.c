@@ -385,7 +385,7 @@ void app_main(void)
 
     nvs_flash_init();
 
-    //system_init();
+    system_init();
 
     // Gamepad
     gamepad_init();
@@ -409,7 +409,7 @@ void app_main(void)
       loader_init(NULL);
 
       LoadState(rom.name);
-      
+
       // Display
       display_init();
     }
