@@ -21,7 +21,7 @@ CS | 4
 
 Place ROMS in folder named 'roms' on root of sdcard, create following structure on sdcard:
 
-/-
+	/-
 
 	|
 
