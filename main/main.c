@@ -33,6 +33,10 @@
 #include <display.h>
 #include <gamepad.h>
 #include <audio.h>
+#include <sdcard.h>
+#include <ui.h>
+#include <settings.h>
+#include <power.h>
 
 extern int debug_trace;
 
@@ -50,6 +54,10 @@ int32_t* audioBuffer[2];
 volatile uint8_t currentAudioBuffer = 0;
 volatile uint16_t currentAudioSampleCount;
 volatile int16_t* currentAudioBufferPtr;
+
+const char* StateFileName = "/gnuboy/data/gnuboy.sav";
+
+const char* SD_BASE_PATH = "/sd";
 
 #define GAMEBOY_WIDTH (160)
 #define GAMEBOY_HEIGHT (144)
@@ -196,16 +204,152 @@ void audioTask(void* arg)
 
 static void SaveState()
 {
-    
+    esp_err_t ret = sdcard_open(SD_BASE_PATH);
+    if (ret != ESP_OK)
+    {
+        printf("Error sdcard");
+    }
+    // Save sram
+    char* romPath = get_rom_name_settings();
+    if (romPath)
+    {
+        char* fileName = system_util_GetFileName(romPath);
+        if (!fileName) abort();
+
+        char* pathName = sdcard_create_savefile_path(SD_BASE_PATH, fileName);
+        if (!pathName) abort();
+
+        FILE* f = fopen(pathName, "w");
+        if (f == NULL)
+        {
+            printf("%s: fopen save failed\n", __func__);
+            abort();
+        }
+
+        savestate(f);
+        fclose(f);
+
+        printf("%s: savestate OK.\n", __func__);
+
+        free(pathName);
+        free(fileName);
+        free(romPath);
+    }
+    else
+    {
+        FILE* f = fopen(StateFileName, "w");
+        if (f == NULL)
+        {
+            printf("SaveState: fopen save failed\n");
+        }
+        else
+        {
+            savestate(f);
+            fclose(f);
+
+            printf("SaveState: savestate OK.\n");
+        }
+    }
+    sdcard_close();
 }
 
 static void LoadState(const char* cartName)
 {
-    
+    esp_err_t ret = sdcard_open(SD_BASE_PATH);
+    if (ret != ESP_OK)
+    {
+        printf("Error sdcard");
+    }
+    char* romName = get_rom_name_settings();
+    if (romName)
+    {
+        char* fileName = system_util_GetFileName(romName);
+        if (!fileName) abort();
+
+        char* pathName = sdcard_create_savefile_path(SD_BASE_PATH, fileName);
+        if (!pathName) abort();
+
+        FILE* f = fopen(pathName, "r");
+        if (f == NULL)
+        {
+            printf("LoadState: fopen load failed\n");
+        }
+        else
+        {
+            loadstate(f);
+            fclose(f);
+
+            vram_dirty();
+            pal_dirty();
+            sound_dirty();
+            mem_updatemap();
+
+            printf("LoadState: loadstate OK.\n");
+        }
+
+        free(pathName);
+        free(fileName);
+        free(romName);
+    }
+    else
+    {
+        FILE* f = fopen(StateFileName, "r");
+        if (f == NULL)
+        {
+            printf("LoadState: fopen load failed\n");
+        }
+        else
+        {
+            loadstate(f);
+            fclose(f);
+
+            vram_dirty();
+            pal_dirty();
+            sound_dirty();
+            mem_updatemap();
+
+            printf("LoadState: loadstate OK.\n");
+        }
+    }
+    sdcard_close();
+    //Volume = odroid_settings_Volume_get();
 }
 
 static void PowerDown()
 {
+    uint16_t* param = 1;
+
+    // Clear audio to prevent studdering
+    printf("PowerDown: stopping audio.\n");
+
+    xQueueSend(audioQueue, &param, portMAX_DELAY);
+    while (AudioTaskIsRunning) {}
+
+    // Stop tasks
+    printf("PowerDown: stopping tasks.\n");
+
+    xQueueSend(vidQueue, &param, portMAX_DELAY);
+    while (videoTaskIsRunning) {}
+
+
+    // state
+    printf("PowerDown: Saving state.\n");
+    SaveState();
+
+    // LCD
+    printf("PowerDown: Powerdown LCD panel.\n");
+    display_poweroff();
+
+    system_sleep();
+    //esp_deep_sleep_start();
+
+    // Should never reach here
+    abort();
+}
+
+static void DoMenuHome()
+{
+    esp_err_t err;
     uint16_t* param = 1;
 
     // Clear audio to prevent studdering
@@ -224,30 +368,54 @@ static void PowerDown()
 
     // state
     printf("PowerDown: Saving state.\n");
-    //SaveState();
+    SaveState();
 
-    // LCD
-    printf("PowerDown: Powerdown LCD panel.\n");
 
-    // Should never reach here
-    abort();
+    // Set menu application
+    set_menu_flag_settings(1);
+
+
+    // Reset
+    esp_restart();
 }
 
 void app_main(void)
 {
     printf("gnuboy (%s-%s).\n", COMPILEDATE, GITREV);
-    
+
+    nvs_flash_init();
+
+    system_init();
+
     // Gamepad
     gamepad_init();
+  
+    // ui init
+    if(!gpio_get_level(MENU) || get_menu_flag_settings() == 1)
+    {
+      ui_init();
 
-    // Display
-    display_init();
+      while(true)
+      {
+        vTaskDelay(100);
+      }
+    }
+    else
+    {
+      // Audio 
+      audio_init(AUDIO_SAMPLE_RATE);
 
-    // Audio 
-    audio_init(AUDIO_SAMPLE_RATE);
+      // Load ROM
+      loader_init(NULL);
 
-    // Load ROM
-    loader_init(NULL);
+      LoadState(rom.name);
+
+      // Display
+      display_init();
+    }
+
+    // set brightness
+    set_display_brightness(get_backlight_settings());
 
     // Clear display
     write_gb_frame(NULL);
@@ -326,11 +494,41 @@ void app_main(void)
     uint actualFrameCount = 0;
     input_gamepad_state lastJoysticState;
 
+    ushort menuButtonFrameCount = 0;
+    bool ignoreMenuButton = lastJoysticState.values[GAMEPAD_INPUT_MENU];
+
     gamepad_read(&lastJoysticState);
     while (true)
     {
         input_gamepad_state joystick;
         gamepad_read(&joystick);
+
+        if (ignoreMenuButton)
+        {
+            ignoreMenuButton = lastJoysticState.values[GAMEPAD_INPUT_MENU];
+        }
+
+        if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && joystick.values[GAMEPAD_INPUT_MENU])
+        {
+            ++menuButtonFrameCount;
+        }
+        else
+        {
+            menuButtonFrameCount = 0;
+        }
+
+        //if (!lastJoysticState.Menu && joystick.Menu)
+        if (menuButtonFrameCount > 60 * 2)
+        {
+            //DoMenu();
+            DoMenuHome();
+        }
+
+        if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && !joystick.values[GAMEPAD_INPUT_MENU])
+        {
+            // Save state
+            PowerDown();
+        }
 
         pad_set(PAD_UP, joystick.values[GAMEPAD_INPUT_UP]);
         pad_set(PAD_RIGHT, joystick.values[GAMEPAD_INPUT_RIGHT]);
