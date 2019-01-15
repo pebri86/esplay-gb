@@ -414,6 +414,9 @@ void app_main(void)
       display_init();
     }
 
+    // set brightness
+    set_display_brightness(get_backlight_settings());
+
     // Clear display
     write_gb_frame(NULL);
 

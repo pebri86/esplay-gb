@@ -49,6 +49,7 @@ static void ui_task(void *arg);
 static void lv_task(void *arg);
 static void copy_rom_task(void *arg);
 static void flash_rom(const char* fullPath);
+static lv_res_t tab_load_callback(lv_obj_t * tab, uint16_t act_id);
 
 LV_IMG_DECLARE(img_bubble_pattern);
 /**********************
@@ -87,7 +88,7 @@ void ui_init()
     //display_prepare();
     display_init();
 
-    xTaskCreatePinnedToCore(&ui_task, "ui_task", 1024 * 3, NULL, 5, NULL, 0);
+    xTaskCreate(&ui_task, "ui_task", 1024 * 3, NULL, 5, NULL);
 
     printf("ui_init done.\n");
 }
@@ -105,6 +106,7 @@ void ui_create(void)
     strcat(VERSION, GITREV);
 
     lv_obj_t * scr = lv_page_create(NULL, NULL);
+    lv_page_set_sb_mode(scr, LV_SB_MODE_OFF);
     lv_scr_load(scr);
 
 #if 1
@@ -223,7 +225,7 @@ static void ui_task(void *arg)
     lv_disp_drv_init(&disp);
     disp.disp_flush = st7735r_flush;
     lv_disp_drv_register(&disp);
-    xTaskCreatePinnedToCore(&lv_task, "lv_task", 1024 * 2, NULL, 5, NULL, 0);
+    xTaskCreate(&lv_task, "lv_task", 1024, NULL, 5, NULL);
 
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
@@ -268,7 +270,7 @@ static lv_res_t list_release_action(lv_obj_t * btn)
     lv_obj_t * mbox2 = lv_mbox_create(lv_scr_act(), NULL);
     lv_mbox_set_text(mbox2, "Loading ROM, Please wait...");
 
-    xTaskCreate(&copy_rom_task, "copy_rom_task", 1024 * 10, NULL, 5, NULL);
+    xTaskCreate(&copy_rom_task, "copy_rom_task", 1024 * 5, NULL, 5, NULL);
 
     return LV_RES_OK;
 }
@@ -332,17 +334,55 @@ static void create_list_page(lv_obj_t * parent)
     lv_page_set_scrl_height(parent, lv_obj_get_height(parent));
     lv_page_set_sb_mode(parent, LV_SB_MODE_OFF);
 
-    /*Crate the list*/
+    /*********************
+     * Create new styles
+     ********************/
+    /*Create a scroll bar style*/
+    static lv_style_t style_sb;
+    lv_style_copy(&style_sb, &lv_style_plain);
+    style_sb.body.main_color = LV_COLOR_BLACK;
+    style_sb.body.grad_color = LV_COLOR_BLACK;
+    style_sb.body.border.color = LV_COLOR_WHITE;
+    style_sb.body.border.width = 0;
+    style_sb.body.border.opa = LV_OPA_70;
+    style_sb.body.radius = LV_RADIUS_CIRCLE;
+    style_sb.body.opa = LV_OPA_60;
+
+    /*Create styles for the buttons*/
+    static lv_style_t style_btn_rel;
+    static lv_style_t style_btn_pr;
+    lv_style_copy(&style_btn_rel, &lv_style_btn_rel);
+    style_btn_pr.body.main_color = LV_COLOR_MAKE(0x55, 0x96, 0xd8);
+    style_btn_pr.body.grad_color = LV_COLOR_MAKE(0x37, 0x62, 0x90);
+    style_btn_pr.text.color = LV_COLOR_WHITE;
+    style_btn_rel.body.border.color = LV_COLOR_WHITE;
+    style_btn_rel.body.border.width = 0;
+    style_btn_rel.body.border.opa = LV_OPA_100;
+    style_btn_rel.body.radius = 0;
+
+    lv_style_copy(&style_btn_pr, &style_btn_rel);
+    style_btn_pr.body.main_color = LV_COLOR_ORANGE;
+    style_btn_pr.body.grad_color = LV_COLOR_ORANGE;
+    style_btn_pr.text.color = LV_COLOR_BLACK;
+
+    /**************************************
+     * Create a list with modified styles
+     **************************************/
+
+    /*Copy the previous list*/
     lv_obj_t * list1 = lv_list_create(parent, NULL);
     lv_obj_set_size(list1, LV_HOR_RES, tabSize);
-    lv_list_set_style(list1, LV_LIST_STYLE_BG, &lv_style_transp_tight);
-    lv_list_set_style(list1, LV_LIST_STYLE_SCRL, &lv_style_transp_tight);
     lv_obj_align(list1, parent, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(parent)-LV_HOR_RES)/2), 0);
+    lv_list_set_sb_mode(list1, LV_SB_MODE_OFF);
+    lv_list_set_style(list1, LV_LIST_STYLE_BG, &lv_style_transp_fit);
+    lv_list_set_style(list1, LV_LIST_STYLE_SCRL, &lv_style_pretty);
+    lv_list_set_style(list1, LV_LIST_STYLE_BTN_REL, &style_btn_rel); /*Set the new button styles*/
+    lv_list_set_style(list1, LV_LIST_STYLE_BTN_PR, &style_btn_pr);
 
     /*Add list elements*/
     for(int i=0; i < fileCount; i++){
         lv_list_add(list1, NULL, files[i], list_release_action);
-        printf("%s\n", files[i]);
+        //printf("%s\n", files[i]);
     }
 
     lv_group_add_obj(group, list1);
@@ -471,7 +511,7 @@ static void flash_rom(const char* fullPath)
         printf("%s: File open error", __func__);
     }
 
-    const int WRITE_BLOCK_SIZE = 1024;
+    const int WRITE_BLOCK_SIZE = 512;
     void* data = malloc(WRITE_BLOCK_SIZE);
     if (!data)
     {
