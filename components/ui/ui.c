@@ -59,6 +59,12 @@ static lv_indev_t * indev;
 static lv_group_t *group;
 static lv_obj_t *header;
 static lv_obj_t *footer;
+static lv_obj_t *list;
+static lv_obj_t *slider;
+static lv_obj_t *btn1;
+static lv_obj_t *tv;
+static lv_obj_t *tab1;
+static lv_obj_t *tab2;
 static int selected = -1;
 static int brightness_value;
 static bool ui_task_is_running = false;
@@ -143,15 +149,16 @@ void ui_create(void)
     style_tv_btn_pr.body.border.width = 0;
     style_tv_btn_pr.text.color = LV_COLOR_GRAY;
 
-    lv_obj_t *tv = lv_tabview_create(scr, NULL);
+    tv = lv_tabview_create(scr, NULL);
     lv_obj_align(tv, header, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(header)-LV_HOR_RES)/2), 10);    
     lv_obj_set_size(tv, LV_HOR_RES, LV_VER_RES - (lv_obj_get_height(header) + lv_obj_get_height(footer)));
+    lv_tabview_set_tab_load_action(tv, tab_load_callback);
 #if 1
     lv_obj_set_parent(wp, ((lv_tabview_ext_t *) tv->ext_attr)->content);
     lv_obj_set_pos(wp, 0, -5);
 #endif
-    lv_obj_t *tab1 = lv_tabview_add_tab(tv, SYMBOL_DIRECTORY " Play");
-    lv_obj_t *tab2 = lv_tabview_add_tab(tv, SYMBOL_SETTINGS " Settings");
+    tab1 = lv_tabview_add_tab(tv, SYMBOL_DIRECTORY " Play");
+    tab2 = lv_tabview_add_tab(tv, SYMBOL_SETTINGS " Settings");
     tabSize = lv_obj_get_height(tab1);
 
     lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BG, &style_tv_btn_bg);
@@ -370,22 +377,23 @@ static void create_list_page(lv_obj_t * parent)
      **************************************/
 
     /*Copy the previous list*/
-    lv_obj_t * list1 = lv_list_create(parent, NULL);
-    lv_obj_set_size(list1, LV_HOR_RES, tabSize);
-    lv_obj_align(list1, parent, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(parent)-LV_HOR_RES)/2), 0);
-    lv_list_set_sb_mode(list1, LV_SB_MODE_OFF);
-    lv_list_set_style(list1, LV_LIST_STYLE_BG, &lv_style_transp_fit);
-    lv_list_set_style(list1, LV_LIST_STYLE_SCRL, &lv_style_pretty);
-    lv_list_set_style(list1, LV_LIST_STYLE_BTN_REL, &style_btn_rel); /*Set the new button styles*/
-    lv_list_set_style(list1, LV_LIST_STYLE_BTN_PR, &style_btn_pr);
+    list = lv_list_create(parent, NULL);
+    lv_obj_set_size(list, LV_HOR_RES, tabSize);
+    lv_obj_align(list, parent, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(parent)-LV_HOR_RES)/2), 0);
+    lv_list_set_sb_mode(list, LV_SB_MODE_OFF);
+    lv_list_set_style(list, LV_LIST_STYLE_BG, &lv_style_transp_fit);
+    lv_list_set_style(list, LV_LIST_STYLE_SCRL, &lv_style_pretty);
+    lv_list_set_style(list, LV_LIST_STYLE_BTN_REL, &style_btn_rel); /*Set the new button styles*/
+    lv_list_set_style(list, LV_LIST_STYLE_BTN_PR, &style_btn_pr);
 
     /*Add list elements*/
     for(int i=0; i < fileCount; i++){
-        lv_list_add(list1, NULL, files[i], list_release_action);
+        lv_list_add(list, NULL, files[i], list_release_action);
         //printf("%s\n", files[i]);
     }
 
-    lv_group_add_obj(group, list1);
+    lv_group_add_obj(group, list);
+    lv_group_focus_obj(list);
 }
 
 static void create_settings_page(lv_obj_t *parent)
@@ -435,7 +443,7 @@ static void create_settings_page(lv_obj_t *parent)
     style_knob.body.opa = LV_OPA_70;
 
     /*Create a second slider*/
-    lv_obj_t *slider = lv_slider_create(parent, NULL);
+    slider = lv_slider_create(parent, NULL);
     lv_slider_set_style(slider, LV_SLIDER_STYLE_BG, &style_bar);
     lv_slider_set_style(slider, LV_SLIDER_STYLE_INDIC, &style_indic);
     lv_slider_set_style(slider, LV_SLIDER_STYLE_KNOB, &style_knob);
@@ -448,7 +456,7 @@ static void create_settings_page(lv_obj_t *parent)
     slider_action(slider);          /*Simulate a user value set the refresh the chart*/
 
     /*Create a save button*/
-    lv_obj_t * btn1 = lv_btn_create(parent, NULL);
+    btn1 = lv_btn_create(parent, NULL);
     lv_cont_set_fit(btn1, true, true); /*Enable resizing horizontally and vertically*/
     lv_obj_align(btn1, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, (LV_VER_RES - slider->coords.y2 - lv_obj_get_height(btn1)) / 2);
     lv_obj_set_free_num(btn1, 1);   /*Set a unique number for the button*/
@@ -457,9 +465,6 @@ static void create_settings_page(lv_obj_t *parent)
     /*Add a label to the button*/
     lv_obj_t * btn1_label = lv_label_create(btn1, NULL);
     lv_label_set_text(btn1_label, SYMBOL_SAVE " Save");
-
-    lv_group_add_obj(group, slider);
-    lv_group_add_obj(group, btn1);
 }
 
 /**
@@ -554,4 +559,28 @@ static void flash_rom(const char* fullPath)
     }
     printf("Flash done.\n");
     close(file);
+}
+
+static lv_res_t tab_load_callback(lv_obj_t * tab, uint16_t act_id)
+{
+    switch(act_id)
+    {
+        case 0: 
+            lv_group_add_obj(group, list); // Add active tab contant to group
+            /* Remove other tabs from group */
+            lv_group_remove_obj(slider);            
+            lv_group_remove_obj(btn1);
+            break;
+
+        case 1:             
+            lv_group_add_obj(group, slider); // Add active tab contant to group
+            lv_group_add_obj(group, btn1);
+            /* Remove other tabs from group */
+            lv_group_remove_obj(list);
+            break;
+    }
+    /*  focus on the tab content */
+    lv_group_focus_next(group);
+
+    return LV_RES_OK;
 }
