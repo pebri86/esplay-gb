@@ -154,7 +154,7 @@ void videoTask(void *arg)
         if (param == 1)
             break;
 
-        write_gb_frame(param);
+        write_gb_frame(param, true);
 
         xQueueReceive(vidQueue, &param, portMAX_DELAY);
     }
@@ -418,7 +418,7 @@ void app_main(void)
     set_display_brightness(get_backlight_settings());
 
     // Clear display
-    write_gb_frame(NULL);
+    write_gb_frame(NULL, false);
 
     // Allocate display buffers
     displayBuffer[0] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
