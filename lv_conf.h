@@ -2,10 +2,8 @@
  * @file lv_conf.h
  *
  */
-
-/*
- * COPY THIS FILE AS lv_conf.h
- */
+#define LCD_TYPE_ILI9341 0
+#define LCD_TYPE_ST7735  1
 
 #if 1 /*Set it to "1" to enable content*/
 
@@ -34,9 +32,19 @@
  *===================*/
 
 /* Horizontal and vertical resolution of the library.*/
+#if LCD_TYPE_ILI9341 == 1
+#define LV_HOR_RES          (320)
+#define LV_VER_RES          (240)
+#define LV_DPI              50
+#elif LCD_TYPE_ST7735 == 1
 #define LV_HOR_RES          (160)
 #define LV_VER_RES          (128)
-#define LV_DPI              30
+#define LV_DPI              20
+#else
+#define LV_HOR_RES          (320)
+#define LV_VER_RES          (240)
+#define LV_DPI              50
+#endif
 
 /* Size of VDB (Virtual Display Buffer: the internal graphics buffer).
  * Required for buffered drawing, opacity and anti-aliasing
@@ -143,10 +151,10 @@
 #define USE_LV_FONT_DEJAVU_10_CYRILLIC     0
 #define USE_LV_FONT_SYMBOL_10              4
 
-#define USE_LV_FONT_DEJAVU_20              0
+#define USE_LV_FONT_DEJAVU_20          	   4
 #define USE_LV_FONT_DEJAVU_20_LATIN_SUP    0
 #define USE_LV_FONT_DEJAVU_20_CYRILLIC     0
-#define USE_LV_FONT_SYMBOL_20              0
+#define USE_LV_FONT_SYMBOL_20              4
 
 #define USE_LV_FONT_DEJAVU_30              0
 #define USE_LV_FONT_DEJAVU_30_LATIN_SUP    0
@@ -168,7 +176,13 @@
  */
 #define LV_FONT_CUSTOM_DECLARE
 
+#if LCD_TYPE_ILI9341 == 1
+#define LV_FONT_DEFAULT        &lv_font_dejavu_20     /*Always set a default font from the built-in fonts*/
+#elif LCD_TYPE_ST7735 == 1
 #define LV_FONT_DEFAULT        &lv_font_dejavu_10     /*Always set a default font from the built-in fonts*/
+#else
+#define LV_FONT_DEFAULT        &lv_font_dejavu_20     /*Always set a default font from the built-in fonts*/
+#endif
 
 /*===================
  *  LV_OBJ SETTINGS

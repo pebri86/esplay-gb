@@ -115,12 +115,10 @@ void ui_create(void)
     lv_page_set_sb_mode(scr, LV_SB_MODE_OFF);
     lv_scr_load(scr);
 
-#if 1
     lv_obj_t *wp = lv_img_create(lv_scr_act(), NULL);
     lv_img_set_src(wp, &img_bubble_pattern);
     lv_obj_set_width(wp, LV_HOR_RES * 4);
     lv_obj_set_protect(wp, LV_PROTECT_POS);
-#endif
 
     /*create group for keypad input*/
     group = lv_group_create();
@@ -150,7 +148,7 @@ void ui_create(void)
     style_tv_btn_pr.text.color = LV_COLOR_GRAY;
 
     tv = lv_tabview_create(scr, NULL);
-    lv_obj_align(tv, header, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(header)-LV_HOR_RES)/2), 10);    
+    lv_obj_align(tv, header, LV_ALIGN_IN_TOP_LEFT, ((lv_obj_get_width(header)-LV_HOR_RES)/2), (lv_obj_get_height(header)));    
     lv_obj_set_size(tv, LV_HOR_RES, LV_VER_RES - (lv_obj_get_height(header) + lv_obj_get_height(footer)));
     lv_tabview_set_tab_load_action(tv, tab_load_callback);
 #if 1
