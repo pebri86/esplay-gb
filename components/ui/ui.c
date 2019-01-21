@@ -187,7 +187,8 @@ static void copy_rom_task(void *arg)
     vTaskDelay(1000);
     ui_task_is_running = false;
     lv_obj_del(lv_scr_act());
-    if(strcmp(get_rom_name_settings(), fullPath) == 0)
+    char * romPath = get_rom_name_settings();
+    if(romPath != NULL && strcmp(get_rom_name_settings(), fullPath) == 0)
     {        
         set_menu_flag_settings(0);
     }
@@ -514,7 +515,7 @@ static void flash_rom(const char* fullPath)
         printf("%s: File open error", __func__);
     }
 
-    const int WRITE_BLOCK_SIZE = 512;
+    const int WRITE_BLOCK_SIZE = 256;
     void* data = malloc(WRITE_BLOCK_SIZE);
     if (!data)
     {

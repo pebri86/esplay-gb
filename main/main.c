@@ -365,15 +365,12 @@ static void DoMenuHome()
     xQueueSend(vidQueue, &param, portMAX_DELAY);
     while (videoTaskIsRunning) {}
 
+    // Set menu application
+    set_menu_flag_settings(1);
 
     // state
     printf("PowerDown: Saving state.\n");
     SaveState();
-
-
-    // Set menu application
-    set_menu_flag_settings(1);
-
 
     // Reset
     esp_restart();
@@ -404,6 +401,8 @@ void app_main(void)
     {
       // Audio 
       audio_init(AUDIO_SAMPLE_RATE);
+
+      audio_volume_set(2);
 
       // Load ROM
       loader_init(NULL);
@@ -520,14 +519,15 @@ void app_main(void)
         //if (!lastJoysticState.Menu && joystick.Menu)
         if (menuButtonFrameCount > 60 * 2)
         {
-            //DoMenu();
-            DoMenuHome();
+            PowerDown();
+            //DoMenuHome();
         }
 
         if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && !joystick.values[GAMEPAD_INPUT_MENU])
         {
-            // Save state
-            PowerDown();
+            // Save State and Go To Menu
+            //PowerDown();
+            DoMenuHome();
         }
 
         pad_set(PAD_UP, joystick.values[GAMEPAD_INPUT_UP]);
