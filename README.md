@@ -1,4 +1,4 @@
-# esp32-micro-gb
+# ESPlay GNUBoy - ESP32 Gameboy emulator
 ----------------
 
 Port of GNUBoy to ESP32, i use WROOM-32 module but applicable to other esp32 that has similar specs or higher like WROVER.
