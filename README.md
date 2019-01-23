@@ -1,13 +1,12 @@
 # ESPlay GNUBoy - ESP32 Gameboy emulator
-----------------
 
 Port of GNUBoy to ESP32, i use WROOM-32 module but applicable to other esp32 that has similar specs or higher like WROVER.
 
 NEW FUNCTION
 - SD Card Support, now you can load ROM from SD, also save and load emulator state on SD card.
 - New UI menu for selecting rom on sdcard.
-- Press Menu Button short time for save state action and then sleep the esp, press short again to wake up and load previously state file.
-- Press Menu long time until menu UI appear to select ROM (play tab). to navigate the ui use select button to choose menu component, then use navigation button up/down/left/right to choose list of rom and then use A button to select rom.
+- Press Menu Button long time for save state action and then sleep the esp, press short again to wake up and load previously state file.
+- Press Menu short time until menu UI appear to select ROM (play tab). to navigate the ui use select button to choose menu component, then use navigation button up/down/left/right to choose list of rom and then use A button to select rom.
 - Choose settings tab for change screen brightness. 
 
 Connect SDCard to the following pins
