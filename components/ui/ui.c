@@ -15,13 +15,14 @@
 #include "nvs_flash.h"
 #include "ui.h"
 #include "display.h"
-#include "st7735r.h"
+#include "ili9341.h"
 #include "gamepad.h"
 #include "display.h"
 #include "settings.h"
 #include "string.h"
 #include "sdcard.h"
 #include "rom/crc.h"
+#include "power.h"
 
 /*********************
  *      DEFINES
@@ -50,6 +51,7 @@ static void lv_task(void *arg);
 static void copy_rom_task(void *arg);
 static void flash_rom(const char* fullPath);
 static lv_res_t tab_load_callback(lv_obj_t * tab, uint16_t act_id);
+static void check_battery(lv_obj_t* battery_label);
 
 LV_IMG_DECLARE(img_bubble_pattern);
 /**********************
@@ -58,6 +60,7 @@ LV_IMG_DECLARE(img_bubble_pattern);
 static lv_indev_t * indev;
 static lv_group_t *group;
 static lv_obj_t *header;
+static lv_obj_t *battery;
 static lv_obj_t *footer;
 static lv_obj_t *list;
 static lv_obj_t *slider;
@@ -94,7 +97,7 @@ void ui_init()
     //display_prepare();
     display_init();
 
-    xTaskCreate(&ui_task, "ui_task", 1024 * 3, NULL, 5, NULL);
+    xTaskCreate(&ui_task, "ui_task", 1024 * 8, NULL, 5, NULL);
 
     printf("ui_init done.\n");
 }
@@ -184,21 +187,9 @@ int ui_choose_rom()
 static void copy_rom_task(void *arg)
 {
     printf("copy_rom_task started.\n");
-    vTaskDelay(1000);
-    ui_task_is_running = false;
-    lv_obj_del(lv_scr_act());
-    char * romPath = get_rom_name_settings();
-    if(romPath != NULL && strcmp(get_rom_name_settings(), fullPath) == 0)
-    {        
-        set_menu_flag_settings(0);
-    }
-    else 
-    {
-        flash_rom(fullPath);    
-        
-        set_rom_name_settings(fullPath);
-        set_menu_flag_settings(0);
-    }
+    vTaskDelay(500);
+    set_rom_name_settings(fullPath);
+    set_menu_flag_settings(0);
 
     // Restart device
     esp_restart();
@@ -229,7 +220,7 @@ static void ui_task(void *arg)
     lv_init();
     lv_disp_drv_t disp;
     lv_disp_drv_init(&disp);
-    disp.disp_flush = st7735r_flush;
+    disp.disp_flush = ili9341_flush;
     lv_disp_drv_register(&disp);
     xTaskCreate(&lv_task, "lv_task", 1024, NULL, 5, NULL);
 
@@ -242,9 +233,15 @@ static void ui_task(void *arg)
     ESP_LOGI(TAG_DEBUG, "(%s) RAM left %d", __func__ , esp_get_free_heap_size());
 
     ui_create();
-
+    unsigned long previousMillis = xTaskGetTickCount();
     while(ui_task_is_running)
     {
+        unsigned long currentMillis = xTaskGetTickCount();
+        if ((currentMillis - previousMillis) > 5000)
+        {
+            check_battery(battery);
+            previousMillis = currentMillis;
+        }
         lv_task_handler();
         vTaskDelay(10/portTICK_PERIOD_MS);
     }
@@ -312,8 +309,9 @@ static void create_header()
     /****************
     * ADD A BATTERY ICON
     ****************/
-    lv_obj_t * battery = lv_label_create(lv_scr_act(), NULL); /*First parameters (scr) is the parent*/
-    lv_label_set_text(battery, SYMBOL_BATTERY_3); /*Set the text*/
+    battery = lv_label_create(lv_scr_act(), NULL); /*First parameters (scr) is the parent*/    
+    battery_level_init();
+    check_battery(battery);
     lv_obj_align(battery, header, LV_ALIGN_IN_TOP_RIGHT, (LV_HOR_RES - lv_obj_get_width(header)-10)/2, 0);
 
     /****************
@@ -582,4 +580,28 @@ static lv_res_t tab_load_callback(lv_obj_t * tab, uint16_t act_id)
     lv_group_focus_next(group);
 
     return LV_RES_OK;
+}
+
+static void check_battery(lv_obj_t * battery_label)
+{
+    battery_state bat;
+    battery_level_read(&bat);
+    printf("Battery Voltage: %d mV, Percentage : %d %%\n", bat.millivolts, bat.percentage);
+
+    char * icon = SYMBOL_BATTERY_EMPTY;
+
+    //update label
+    if (bat.percentage <= 100 && bat.percentage > 80)
+        icon = SYMBOL_BATTERY_FULL;
+    else if (bat.percentage < 80 && bat.percentage > 60)
+        icon = SYMBOL_BATTERY_3;
+    else if (bat.percentage < 60 && bat.percentage > 40)
+        icon = SYMBOL_BATTERY_2;
+    else if (bat.percentage < 40 && bat.percentage > 5)
+        icon = SYMBOL_BATTERY_1;
+    else if (bat.percentage < 5)
+        icon = SYMBOL_BATTERY_EMPTY;
+    else icon = SYMBOL_BATTERY_FULL;
+
+    lv_label_set_text(battery_label, icon);
 }

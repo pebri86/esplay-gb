@@ -2,8 +2,8 @@
  * @file lv_conf.h
  *
  */
-#define LCD_TYPE_ILI9341 0
-#define LCD_TYPE_ST7735  1
+#define LCD_TYPE_ILI9341 1
+#define LCD_TYPE_ST7735  0
 
 #if 1 /*Set it to "1" to enable content*/
 
