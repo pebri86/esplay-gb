@@ -204,11 +204,6 @@ void audioTask(void* arg)
 
 static void SaveState()
 {
-    esp_err_t ret = sdcard_open(SD_BASE_PATH);
-    if (ret != ESP_OK)
-    {
-        printf("Error sdcard");
-    }
     // Save sram
     char* romPath = get_rom_name_settings();
     if (romPath)
@@ -250,16 +245,10 @@ static void SaveState()
             printf("SaveState: savestate OK.\n");
         }
     }
-    sdcard_close();
 }
 
 static void LoadState(const char* cartName)
 {
-    esp_err_t ret = sdcard_open(SD_BASE_PATH);
-    if (ret != ESP_OK)
-    {
-        printf("Error sdcard");
-    }
     char* romName = get_rom_name_settings();
     if (romName)
     {
@@ -311,8 +300,6 @@ static void LoadState(const char* cartName)
             printf("LoadState: loadstate OK.\n");
         }
     }
-    sdcard_close();
-    //Volume = odroid_settings_Volume_get();
 }
 
 static void PowerDown()
@@ -384,6 +371,17 @@ void app_main(void)
 
     system_init();
 
+    // Audio 
+    audio_init(AUDIO_SAMPLE_RATE);
+
+    // Display
+    display_prepare();
+    display_init();
+
+    // set brightness
+    set_display_brightness(get_backlight_settings());
+    audio_volume_set(get_volume_settings());
+
     // Gamepad
     gamepad_init();
   
@@ -396,25 +394,10 @@ void app_main(void)
       {
         vTaskDelay(100);
       }
-    }
-    else
-    {
-      // Audio 
-      audio_init(AUDIO_SAMPLE_RATE);
+    }  
 
-      audio_volume_set(2);
-
-      // Load ROM
-      loader_init(NULL);
-
-      LoadState(rom.name);
-
-      // Display
-      display_init();
-    }
-
-    // set brightness
-    set_display_brightness(get_backlight_settings());
+    // Load ROM
+    loader_init(NULL);
 
     // Clear display
     write_gb_frame(NULL, false);
@@ -480,12 +463,14 @@ void app_main(void)
     audioBuffer[1] = heap_caps_malloc(AUDIO_BUFFER_SIZE, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
 
     if (audioBuffer[0] == 0 || audioBuffer[1] == 0)
-        abort();
-
+      abort();
 
     sound_reset();
 
     lcd_begin();
+
+    // Load state
+    LoadState(rom.name);
 
     uint startTime;
     uint stopTime;

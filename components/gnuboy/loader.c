@@ -27,11 +27,13 @@
 #include "rtc.h"
 #include "rc.h"
 #include "sound.h"
+#include "settings.h"
+#include "sdcard.h"
 
 void* FlashAddress = 0;
 FILE* RomFile = NULL;
 uint8_t BankCache[512 / 8];
-
+extern const char* SD_BASE_PATH;
 
 #ifndef GNUBOY_NO_MINIZIP
 static int check_zip(char *filename);
@@ -192,7 +194,7 @@ static byte *decompress(byte *data, int *len)
 
 int rom_load()
 {
-	byte c, *data, *header;
+	/*byte c, *data, *header;
 	int len = 0, rlen;
 
 	const esp_partition_t* part;
@@ -213,6 +215,55 @@ int rom_load()
 	}
 
 	BankCache[0] = 1;
+	*/
+	byte c, *data, *header;
+	int len = 0, rlen;
+	nvs_flash_init();
+
+	data = (void*)0x3f800000;
+
+	char* romPath = get_rom_name_settings();
+	if (!romPath)
+	{
+		printf("loader: Reading from flash.\n");
+
+		// copy from flash
+		spi_flash_mmap_handle_t hrom;
+
+		const esp_partition_t* part = esp_partition_find_first(0x40, 0, NULL);
+		if (part == 0)
+		{
+			printf("esp_partition_find_first failed.\n");
+			abort();
+		}
+
+		void* flashAddress;
+		for (size_t offset = 0; offset < 0x400000; offset += 0x100000)
+		{
+			esp_err_t err = esp_partition_read(part, offset, (void *)(data + offset), 0x100000);
+			if (err != ESP_OK)
+			{
+				printf("esp_partition_read failed. size = %x, offset = %x (%d)\n", part->size, offset, err);
+				abort();
+			}
+		}
+	}
+	else
+	{
+		printf("loader: Reading from sdcard.\n");
+
+		// copy from SD card
+		esp_err_t r = sdcard_open(SD_BASE_PATH);
+		if (r != ESP_OK)
+		{
+			abort();
+		}
+
+		// copy
+		sdcard_copy_file_to_memory(romPath, (void*)data);
+		
+		BankCache[0] = 1;
+	}
 
 	printf("Initialized. ROM@%p\n", data);
 	header = data;
