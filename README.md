@@ -1,5 +1,7 @@
 # ESPlay GNUBoy - ESP32 Gameboy emulator 
 
+![esplay-hardware](https://github.com/pebri86/esplay-nes/blob/master/hardware/rsz_1rsz_img_20190131_153830.jpg)
+
 This branch only support [esplay-hardware], a esp32 device designed by me, and this branch only support ESP32 with PSRAM. If you're looking for old version please use esplay1.0 branch.
 
 [esplay-hardware]: https://github.com/pebri86/esplay-hardware
