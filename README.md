@@ -28,13 +28,13 @@ Place ROMS in folder named 'roms/gb' on root of sdcard, create following structu
 
    	|	--data (this to place state file as .sav)
 
-		|
+			|
 		
-		--gbc
+			--gbc
 		
-		|
+			|
 		
-		--nes
+			--nes
 
 Compiling
 ---------
