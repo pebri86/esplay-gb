@@ -4,7 +4,7 @@ This branch only support [esplay-hardware], a esp32 device designed by me, and t
 
 [esplay-hardware]: https://github.com/pebri86/esplay-hardware
 
-Port of GNUBoy to ESP32, i use WROOM-32 module but applicable to other esp32 that has similar specs or higher like WROVER.
+Port of GNUBoy to ESP32, i use WROVER module.
 
 Place ROMS in folder named 'roms/gb' on root of sdcard, create following structure on sdcard:
 
@@ -16,7 +16,7 @@ Place ROMS in folder named 'roms/gb' on root of sdcard, create following structu
 	
 	|	|
 		
-	|	--gb (place your ROMS here)
+	|	--gbc (place your ROMS here)
 	
  	|
 
@@ -26,6 +26,13 @@ Place ROMS in folder named 'roms/gb' on root of sdcard, create following structu
 
    	|	--data (this to place state file as .sav)
 
+		|
+		
+		--gbc
+		
+		|
+		
+		--nes
 
 Compiling
 ---------
