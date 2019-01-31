@@ -374,7 +374,13 @@ void app_main(void)
     // Audio 
     audio_init(AUDIO_SAMPLE_RATE);
 
-    audio_volume_set(1);
+    // Display
+    display_prepare();
+    display_init();
+
+    // set brightness
+    set_display_brightness(get_backlight_settings());
+    audio_volume_set(get_volume_settings());
 
     // Gamepad
     gamepad_init();
@@ -389,13 +395,6 @@ void app_main(void)
         vTaskDelay(100);
       }
     }  
-
-    // Display
-    display_prepare();
-    display_init();
-
-    // set brightness
-    set_display_brightness(get_backlight_settings());
 
     // Load ROM
     loader_init(NULL);
