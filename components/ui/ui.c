@@ -190,6 +190,7 @@ static void copy_rom_task(void *arg)
     vTaskDelay(500);
     set_rom_name_settings(fullPath);
     set_menu_flag_settings(0);
+    free(fullPath);
 
     // Restart device
     esp_restart();
