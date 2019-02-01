@@ -2,11 +2,11 @@
 
 ![esplay-hardware](https://github.com/pebri86/esplay-nes/blob/master/hardware/rsz_1rsz_img_20190131_153830.jpg)
 
-This branch only support [esplay-hardware], a esp32 device designed by me, and this branch only support ESP32 with PSRAM. If you're looking for old version please use esplay1.0 branch.
+This branch only support [esplay-hardware], an esp32 based device designed by me, and this branch only support ESP32 with PSRAM. If you're looking for old version please use esplay1.0 branch.
 
 [esplay-hardware]: https://github.com/pebri86/esplay-hardware
 
-Port of GNUBoy to ESP32, i use WROVER module.
+Port of GNUBoy to ESP32, i use WROVER module with 3.3v flash, this version allowed SDCard work in SDMMC peripheral.
 
 Place ROMS in folder named 'roms/gb' on root of sdcard, create following structure on sdcard:
 
